@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HR Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .login-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .hidden {
+            display: none;
+        }
+        .phase-cell {
+            position: relative;
+        }
+        .phase-cell::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transform: translateY(-50%);
+        }
+        .phase-pending::after {
+            background-color: #f87171;
+        }
+        .phase-complete::after {
+            background-color: #34d399;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+    <!-- Login Page -->
+    <div id="loginPage" class="login-bg min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl p-8 w-full max-w-md">
+            <h2 class="text-2xl font-bold text-center mb-8">HR Management System</h2>
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="email" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                </div>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard" class="hidden">
+        <!-- Header -->
+        <header class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-gray-900" id="dashboardTitle">Dashboard</h1>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-900">
+                    <i class="bi bi-box-arrow-right text-xl"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+            <!-- HR Dashboard -->
+            <div id="hrDashboard" class="hidden">
+                <div class="bg-white shadow rounded-lg p-6">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Description</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">L0</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">L1</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">L2</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">L3</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">L4</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200" id="jobTable">
+                                <!-- Table rows will be dynamically added here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Team Lead Dashboard -->
+            <div id="teamLeadDashboard" class="hidden">
+                <div class="mb-6">
+                    <button onclick="showJobDescriptionForm()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                        Create Job Description
+                    </button>
+                </div>
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-medium mb-4">My Job Descriptions</h3>
+                    <div id="teamLeadJobList" class="space-y-4">
+                        <!-- Job descriptions will be added here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CEO Dashboard -->
+            <div id="ceoDashboard" class="hidden">
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h3 class="text-lg font-medium mb-4">All Job Descriptions</h3>
+                    <div id="ceoJobList" class="space-y-4">
+                        <!-- Job descriptions will be added here -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for adding/editing candidates -->
+    <div id="candidateModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium" id="modalTitle">Add Candidates</h3>
+                <form id="candidateForm" class="mt-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Candidate Names (one per line)</label>
+                        <textarea id="candidateNames" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Description Form Modal -->
+    <div id="jobDescriptionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <h3 class="text-lg font-medium">Create Job Description</h3>
+                <form id="jobDescriptionForm" class="mt-4">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700">Job Description</label>
+                        <textarea id="jobDescription" rows="4" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeJobDescriptionModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Mock data store
+        const mockData = {
+            users: [
+                { email: 'hr@example.com', password: 'hr123', role: 'HR' },
+                { email: 'ceo@example.com', password: 'ceo123', role: 'CEO' },
+                { email: 'lead@example.com', password: 'lead123', role: 'TEAM_LEAD' }
+            ],
+            jobs: [],
+            currentUser: null
+        };
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const user = mockData.users.find(u => u.email === email && u.password === password);
+            if (user) {
+                mockData.currentUser = user;
+                showDashboard(user.role);
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+
+        // Show dashboard based on role
+        function showDashboard(role) {
+            document.getElementById('loginPage').classList.add('hidden');
+            document.getElementById('dashboard').classList.remove('hidden');
+            
+            document.getElementById('hrDashboard').classList.add('hidden');
+            document.getElementById('teamLeadDashboard').classList.add('hidden');
+            document.getElementById('ceoDashboard').classList.add('hidden');
+
+            document.getElementById('dashboardTitle').textContent = `${role} Dashboard`;
+
+            switch(role) {
+                case 'HR':
+                    document.getElementById('hrDashboard').classList.remove('hidden');
+                    refreshJobTable();
+                    break;
+                case 'TEAM_LEAD':
+                    document.getElementById('teamLeadDashboard').classList.remove('hidden');
+                    refreshTeamLeadJobs();
+                    break;
+                case 'CEO':
+                    document.getElementById('ceoDashboard').classList.remove('hidden');
+                    refreshCEOJobs();
+                    break;
+            }
+        }
+
+        // Logout function
+        function logout() {
+            mockData.currentUser = null;
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('loginPage').classList.remove('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        // Job Description form handlers
+        function showJobDescriptionForm() {
+            document.getElementById('jobDescriptionModal').classList.remove('hidden');
+        }
+
+        function closeJobDescriptionModal() {
+            document.getElementById('jobDescriptionModal').classList.add('hidden');
+            document.getElementById('jobDescriptionForm').reset();
+        }
+
+        document.getElementById('jobDescriptionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const description = document.getElementById('jobDescription').value;
+            const newJob = {
+                id: Date.now(),
+                description: description,
+                teamLead: mockData.currentUser.email,
+                status: 'OPEN',
+                phases: {
+                    L0: [],
+                    L1: [],
+                    L2: [],
+                    L3: [],
+                    L4: []
+                }
+            };
+            mockData.jobs.push(newJob);
+            closeJobDescriptionModal();
+            refreshTeamLeadJobs();
+        });
+
+        // Candidate modal handlers
+        function showCandidateModal(jobId, phase) {
+            const modal = document.getElementById('candidateModal');
+            modal.dataset.jobId = jobId;
+            modal.dataset.phase = phase;
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('candidateModal');
+            modal.classList.add('hidden');
+            document.getElementById('candidateForm').reset();
+        }
+
+        document.getElementById('candidateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const modal = document.getElementById('candidateModal');
+            const jobId = parseInt(modal.dataset.jobId);
+            const phase = modal.dataset.phase;
+            const candidates = document.getElementById('candidateNames').value
+                .split('\n')
+                .filter(name => name.trim());
+
+            const job = mockData.jobs.find(j => j.id === jobId);
+            if (job) {
+                job.phases[phase] = candidates;
+                refreshJobTable();
+                closeModal();
+            }
+        });
+
+        // Refresh functions for different dashboards
+        function refreshJobTable() {
+            const tableBody = document.getElementById('jobTable');
+            tableBody.innerHTML = '';
+
+            mockData.jobs.forEach(job => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">${job.description}</td>
+                    <td class="px-6 py-4 whitespace-nowrap phase-cell ${job.phases.L0.length ? 'phase-complete' : 'phase-pending'}">
+                        ${job.phases.L0.length} candidates
+                        ${mockData.currentUser.role === 'HR' ? 
+                            `<button onclick="showCandidateModal(${job.id}, 'L0')" class="text-indigo-600 hover:text-indigo-900 ml-2">
+                                <i class="bi bi-pencil"></i>
+                            </button>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap phase-cell ${job.phases.L1.length ? 'phase-complete' : 'phase-pending'}">
+                        ${job.phases.L1.length} candidates
+                        ${mockData.currentUser.role === 'HR' ? 
+                            `<button onclick="showCandidateModal(${job.id}, 'L1')" class="text-indigo-600 hover:text-indigo-900 ml-2">
+                                <i class="bi bi-pencil"></i>
+                            </button>` : ''}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap phase-cell ${job.phases.L2.length ? 'phase-complete' : 'phase-pending'}">
+                        ${job.phases.L2.length} candidates
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap phase-cell ${job.phases.L3.length ? 'phase-complete' : 'phase-pending'}">
+                        ${job.phases.L3.length} candidates
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap phase-cell ${job.phases.L4.length ? 'phase-complete' : 'phase-pending'}">
+                        ${job.phases.L4.length} candidates
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${job.status === 'OPEN' ? 
+                            `<button onclick="closeJob(${job.id})" class="text-red-600 hover:text-red-900">
+                                Close Job
+                            </button>` : 'Closed'}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function refreshTeamLeadJobs() {
+            const jobList = document.getElementById('teamLeadJobList');
+            jobList.innerHTML = '';
+
+            const userJobs = mockData.jobs.filter(job => job.teamLead === mockData.currentUser.email);
+            userJobs.forEach(job => {
+                const jobCard = document.createElement('div');
+                jobCard.className = 'bg-gray-50 p-4 rounded-lg';
+                jobCard.innerHTML = `
+                    <h4 class="font-medium">${job.description}</h4>
+                    <p class="text-sm text-gray-600 mt-2">Status: ${job.status}</p>
+                    <div class="mt-2 grid grid-cols-5 gap-2">
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L0</div>
+                            <div class="font-medium">${job.phases.L0.length}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L1</div>
+                            <div class="font-medium">${job.phases.L1.length}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L2</div>
+                            <div class="font-medium">${job.phases.L2.length}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L3</div>
+                            <div class="font-medium">${job.phases.L3.length}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L4</div>
+                            <div class="font-medium">${job.phases.L4.length}</div>
+                        </div>
+                    </div>
+                `;
+                jobList.appendChild(jobCard);
+            });
+        }
+
+        function refreshCEOJobs() {
+            const jobList = document.getElementById('ceoJobList');
+            jobList.innerHTML = '';
+
+            mockData.jobs.forEach(job => {
+                const jobCard = document.createElement('div');
+                jobCard.className = 'bg-gray-50 p-4 rounded-lg';
+                jobCard.innerHTML = `
+                    <h4 class="font-medium">${job.description}</h4>
+                    <p class="text-sm text-gray-600 mt-2">Created by: ${job.teamLead}</p>
+                    <p class="text-sm text-gray-600">Status: ${job.status}</p>
+                    <div class="mt-2 grid grid-cols-5 gap-2">
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L0</div>
+                            <div class="font-medium">${job.phases.L0.length}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L1</div>
+                            <div class="font-medium">${job.phases.L1.length}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L2</div>
+                            <div class="font-medium">${job.phases.L2.length}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L3</div>
+                            <div class="font-medium">${job.phases.L3.length}</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-500">L4</div>
+                            <div class="font-medium">${job.phases.L4.length}</div>
+                        </div>
+                    </div>
+                    ${mockData.currentUser.role === 'CEO' && job.status === 'OPEN' ? 
+                        `<button onclick="showCandidateModal(${job.id}, 'L4')" class="mt-2 text-indigo-600 hover:text-indigo-900">
+                            Update L4 Candidates
+                        </button>` : ''}
+                `;
+                jobList.appendChild(jobCard);
+            });
+        }
+
+        function closeJob(jobId) {
+            const job = mockData.jobs.find(j => j.id === jobId);
+            if (job) {
+                job.status = 'CLOSED';
+                refreshJobTable();
+            }
+        }
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
